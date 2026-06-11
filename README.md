@@ -1,3 +1,12 @@
+---
+title: Thesis Defender
+emoji: 📈
+colorFrom: red
+colorTo: blue
+sdk: docker
+pinned: false
+---
+
 <div align="left">
   <h1>ThesisDefender</h1>
   <p><strong>Paste any argument. Find out exactly where it breaks.</strong></p>
