@@ -22,7 +22,7 @@ export default function ResilienceMeter({ score, label }: ResilienceMeterProps) 
         </span>
         <div className="flex flex-col items-center mt-2 px-4 text-center">
           {(() => {
-            const match = label.match(/^([^.]+\.)(.*)/s);
+            const match = label.match(/^([^.]+\.)([\s\S]*)/);
             if (match) {
               return (
                 <>
