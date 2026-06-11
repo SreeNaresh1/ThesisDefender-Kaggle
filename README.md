@@ -1,5 +1,5 @@
-<div align="center">
-  <h1>🛡️ ThesisDefender</h1>
+<div align="left">
+  <h1>ThesisDefender</h1>
   <p><strong>Paste any argument. Find out exactly where it breaks.</strong></p>
   <p><i>Built for the Microsoft Agents League Hackathon 2026 (Reasoning Agents track)</i></p>
   
