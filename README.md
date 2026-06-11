@@ -97,6 +97,24 @@ Get ThesisDefender running locally in minutes.
    npm run dev
    ```
 
+## 🌍 Deployment
+
+### Deploy Backend (Hugging Face Spaces)
+The backend is Dockerized and pre-configured for Hugging Face Spaces.
+1. Create a new **Docker** Space on Hugging Face.
+2. Link your GitHub repository or copy the contents of the `backend` folder.
+3. In your Space's **Settings**, add the necessary Secrets (e.g., `MODEL_PROVIDER`, `OPENROUTER_API_KEY`).
+4. The Space will automatically build and deploy on port `7860`.
+
+### Deploy Frontend (Vercel)
+The frontend is built with Next.js and deploys seamlessly on Vercel.
+1. Go to your Vercel Dashboard and click **Add New > Project**.
+2. Import this GitHub repository.
+3. Set the **Framework Preset** to `Next.js` and the **Root Directory** to `frontend`.
+4. In the **Environment Variables** section, add:
+   - `NEXT_PUBLIC_API_URL`: Set this to your Hugging Face Space URL (e.g., `https://your-username-spacename.hf.space`).
+5. Click **Deploy**.
+
 ## 🎥 Demonstration
 
 Want to see it in action? Check out our 3-minute hackathon pitch script in [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md).
