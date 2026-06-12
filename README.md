@@ -8,9 +8,7 @@
   [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
   [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
   ![Vercel](https://img.shields.io/badge/Deployed_on-Vercel-black.svg)
-  ![Hugging Face](https://img.shields.io/badge/Backend-Hugging_Face-yellow.svg)
-
-  <h3><a href="https://thesis-defender.vercel.app">🚀 Try the Live Demo</a> | <a href="https://huggingface.co/spaces/SreeNaresh/thesis-defender">🤖 View Backend API</a></h3>
+  ![Hugging Face](https://img.shields.io/badge/Backend-Hugging_Face-yellow.svg)  
 </div>
 
 <hr />
