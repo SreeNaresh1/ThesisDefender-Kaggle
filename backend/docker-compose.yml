@@ -4,7 +4,8 @@ services:
   backend:
     build: .
     ports:
-      - "8000:8000"
+      - "7860:7860"  # FastAPI
+      - "8001:8001"  # FastMCP Server
     environment:
       - REDIS_URL=redis://redis:6379
     env_file:

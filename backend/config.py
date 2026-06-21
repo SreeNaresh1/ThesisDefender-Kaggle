@@ -19,6 +19,16 @@ class Settings(BaseSettings):
     # Infrastructure
     REDIS_URL: str = "redis://localhost:6379"
     UNPAYWALL_EMAIL: Optional[str] = None
+
+    # ADK integration — set USE_ADK=true to route through Google ADK SequentialAgent.
+    # Defaults to False: original pipeline.py logic runs unchanged.
+    USE_ADK: bool = False
+
+    # MCP Server integration (Phase 2)
+    # URL of the running FastMCP SSE server started by mcp_server/run_server.py.
+    # Agents degrade gracefully to no enrichment if the server is unreachable.
+    MCP_SERVER_URL: str = "http://localhost:8001/sse"
+    MCP_PORT: int = 8001
     
     @model_validator(mode="after")
     def validate_api_keys(self) -> 'Settings':

@@ -4,11 +4,30 @@ from datetime import datetime, timezone
 
 from models.schemas import AnalysisRequest, AnalysisJob
 from agents.pipeline import run_analysis
+from security.guards import (
+    sanitize_argument,
+    validate_argument,
+    ArgumentRejected,
+)
 
 router = APIRouter()
 
 @router.post("")
 async def start_analysis(req: AnalysisRequest, request: Request, background_tasks: BackgroundTasks):
+    # -----------------------------------------------------------------------
+    # Security Layer 1 & 2 — Sanitize input, validate, detect injection
+    # Pydantic already enforced min_length=2, max_length=3000 on AnalysisRequest.
+    # sanitize_argument() strips control chars and collapses excess blank lines.
+    # validate_argument() re-checks length after sanitization, verifies printability,
+    # and detects prompt injection patterns — raises ArgumentRejected if unsafe.
+    # -----------------------------------------------------------------------
+    clean_argument = sanitize_argument(req.argument)
+
+    try:
+        validate_argument(clean_argument)
+    except ArgumentRejected as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
     job_id = str(uuid.uuid4())
     job = AnalysisJob(
         job_id=job_id,
@@ -25,7 +44,7 @@ async def start_analysis(req: AnalysisRequest, request: Request, background_task
     background_tasks.add_task(
         run_analysis,
         job_id=job_id,
-        argument=req.argument,
+        argument=clean_argument,   # sanitized text passed to pipeline
         model_client=request.app.state.model_client,
         foundry_client=None,
         queue=queue

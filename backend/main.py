@@ -7,10 +7,18 @@ from api.routes import analyze, health
 from config import settings
 from services.model_client import create_model_client
 from jobs.queue import JobQueue
+from security.guards import audit_secrets
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    # Layer 3 — Secrets Management Audit
+    # Log any secrets issues at startup without blocking the server.
+    _secret_issues = audit_secrets()
+    for _issue in _secret_issues:
+        import logging as _logging
+        _logging.getLogger(__name__).warning("[Security] Secrets audit: %s", _issue)
+
     app.state.model_client = create_model_client()
     app.state.job_queue = JobQueue(settings.REDIS_URL)
     await app.state.job_queue.connect()

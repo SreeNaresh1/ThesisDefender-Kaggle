@@ -4,6 +4,7 @@ import json
 import pydantic
 from datetime import datetime, timezone
 
+from config import settings
 from models.schemas import ArgumentAnalysis, ArgumentStructure, DefenseOutput, AttackOutput, VerdictOutput
 from services.model_client import ModelClient
 from jobs.queue import JobQueue
@@ -98,6 +99,8 @@ Return ONLY valid JSON matching this schema. CRITICAL: You MUST independently ca
   "reasoning_summary": "A brief summary of how the score was decided based on the defense vs attack"
 }"""
 
+from security.guards import validate_llm_output, OutputValidationError
+
 async def _robust_llm_call(model_client: ModelClient, system_prompt: str, user_prompt: str, temperature: float, max_tokens: int, schema_class):
     for attempt in range(3):
         try:
@@ -109,8 +112,11 @@ async def _robust_llm_call(model_client: ModelClient, system_prompt: str, user_p
             )
             if not data:
                 raise ValueError("Empty response received")
-            return schema_class.model_validate(data)
-        except (json.JSONDecodeError, pydantic.ValidationError, ValueError) as e:
+            result = schema_class.model_validate(data)
+            # Layer 4 — business-rule validation beyond Pydantic schema
+            validate_llm_output(result)
+            return result
+        except (json.JSONDecodeError, pydantic.ValidationError, ValueError, OutputValidationError) as e:
             if attempt == 2:
                 raise e
             logger.warning(f"LLM call failed (attempt {attempt+1}), retrying: {e}")
@@ -123,6 +129,27 @@ async def run_analysis(
     foundry_client,  # Ignored, kept for signature compatibility
     queue: JobQueue
 ) -> None:
+    # -----------------------------------------------------------------------
+    # ADK dispatch — opt-in via USE_ADK=true in environment / .env
+    # When enabled, delegates to the ADK SequentialAgent pipeline.
+    # When disabled (default), runs the original 4-call logic below.
+    # The import is lazy so that google-adk is not required when USE_ADK=False.
+    # -----------------------------------------------------------------------
+    if settings.USE_ADK:
+        logger.info("[pipeline] USE_ADK=True — delegating to ADK runner for job %s", job_id)
+        from adk.pipeline_adk import run_analysis_adk  # lazy import
+        await run_analysis_adk(
+            job_id=job_id,
+            argument=argument,
+            model_client=model_client,
+            queue=queue,
+        )
+        return
+
+    # -----------------------------------------------------------------------
+    # Original pipeline (USE_ADK=False, default)
+    # 4 sequential LLM calls: Orchestrator → Defense → Prosecutor → Judge
+    # -----------------------------------------------------------------------
     start_time = time.time()
     try:
         # Step 1: Orchestrator
