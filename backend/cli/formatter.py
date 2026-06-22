@@ -19,6 +19,8 @@ import sys
 import json
 from typing import Optional
 
+from config import settings
+
 from models.schemas import ArgumentAnalysis, get_score_label
 
 
@@ -225,7 +227,7 @@ def format_analysis(analysis: ArgumentAnalysis) -> str:
     lines += [
         _hr("─"),
         _dim(f"  ⏱  Processed in {processing_s:.1f}s  ·  {analysis.total_llm_calls} LLM calls"),
-        _dim(f"  🤖 Pipeline: {'ADK SequentialAgent' if analysis.total_llm_calls else 'Original'}"),
+        _dim(f"  🤖 Pipeline: {'ADK SequentialAgent' if settings.USE_ADK else 'Standard Pipeline'}"),
         "",
     ]
 

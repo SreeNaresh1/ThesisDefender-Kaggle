@@ -165,7 +165,7 @@ async def run_analysis(
             SYSTEM_PROMPT_ORCHESTRATOR,
             f"Argument to analyze:\n\n{argument}",
             0.1,
-            2000,
+            1000,
             ArgumentStructure
         )
 
@@ -182,7 +182,7 @@ async def run_analysis(
             SYSTEM_PROMPT_DEFENSE,
             build_defense_user_prompt(argument, structure),
             0.3,
-            3000,
+            1000,
             DefenseOutput
         )
 
@@ -199,7 +199,7 @@ async def run_analysis(
             SYSTEM_PROMPT_PROSECUTOR,
             build_prosecutor_user_prompt(argument, structure, defense),
             0.3,
-            3000,
+            1000,
             AttackOutput
         )
 
@@ -216,7 +216,7 @@ async def run_analysis(
             SYSTEM_PROMPT_JUDGE,
             build_judge_user_prompt(argument, structure, defense, attack),
             0.0,
-            4000,
+            1000,
             VerdictOutput
         )
         
