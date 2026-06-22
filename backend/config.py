@@ -45,4 +45,23 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
 
-settings = Settings()
+try:
+    settings = Settings()
+except Exception as exc:
+    import sys
+    # Extract the human-readable message from the Pydantic ValidationError
+    msg = str(exc)
+    # Strip Pydantic noise — print just the value error lines
+    lines = [ln.strip() for ln in msg.splitlines() if ln.strip()]
+    print("\n" + "="*60, file=sys.stderr)
+    print("  ThesisDefender — CONFIGURATION ERROR", file=sys.stderr)
+    print("="*60, file=sys.stderr)
+    for ln in lines:
+        if "Value error" in ln or "required" in ln.lower() or "missing" in ln.lower():
+            print(f"  ✗ {ln}", file=sys.stderr)
+    print(file=sys.stderr)
+    print("  Fix: Copy .env.example → .env and fill in your API keys.", file=sys.stderr)
+    print("  Docs: See DEPLOYMENT.md for required environment variables.", file=sys.stderr)
+    print("="*60 + "\n", file=sys.stderr)
+    sys.exit(1)
+
