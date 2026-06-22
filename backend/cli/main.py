@@ -26,7 +26,7 @@ from config import settings
 from services.model_client import create_model_client
 from agents.pipeline import run_analysis
 from security.guards import sanitize_argument, validate_argument, ArgumentRejected
-from cli.queue import CliQueue
+from cli.cli_queue import CliQueue
 from cli.formatter import print_analysis
 
 
@@ -77,6 +77,19 @@ async def _run_analyze(args: argparse.Namespace) -> None:
     print(f"\n🚀 Starting ThesisDefender Analysis (Job: {job_id})")
     print(f"🤖 Provider: {model_client.provider.upper()}")
     print(f"🔄 Engine:   {'ADK Pipeline (mcp enabled)' if settings.USE_ADK else 'Standard Pipeline'}\n")
+
+    from models.schemas import AnalysisJob
+    from datetime import datetime, timezone
+    await cli_queue.create_job(AnalysisJob(
+        job_id=job_id, 
+        status="pending", 
+        message="Analysis started", 
+        argument=clean_text,
+        current_step=0,
+        current_step_label="Pending",
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
+    ))
 
     # 4. Run pipeline
     # The pipeline is identical to the web route, we just pass the CLI queue adapter

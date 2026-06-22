@@ -321,7 +321,7 @@ class TestValidateLLMOutput:
             resilience_score=score,
             verdict=verdict,
             critical_vulnerability=vulnerability,
-            recommended_fixes=fixes or ["Add citations.", "Narrow the scope."],
+            recommended_fixes=fixes if fixes is not None else ["Add citations.", "Narrow the scope."],
             stronger_version=stronger,
             reasoning_summary=summary,
         )

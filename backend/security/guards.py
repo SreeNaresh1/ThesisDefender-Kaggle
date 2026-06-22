@@ -151,12 +151,18 @@ _INJECTION_PATTERNS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"what\s+(are|were)\s+your\s+(instructions?|directives?|system\s+prompt|initial\s+prompt)", re.I),
      "exfiltration attempt: 'what are your instructions'"),
 
-    (re.compile(r"(show|print|output)\s+(the\s+)?(full|entire|complete|raw)\s+(prompt|system|context|history)", re.I),
+    (re.compile(r"(show|print|output)\s+(the\s+)?(full|entire|complete|raw)\s+(prompt|system|context|history|instructions?)", re.I),
      "exfiltration attempt: 'show full prompt'"),
+
+    (re.compile(r"print\s+(your\s+)?(full|entire|complete|all)\s+(instructions?|prompt|system)", re.I),
+     "exfiltration attempt: 'print full instructions'"),
 
     # ---- Role switching / persona injection ----
     (re.compile(r"(you\s+are|act\s+as|pretend\s+(to\s+be|you\s+are)|roleplay\s+as|simulate\s+being)\s+(a\s+)?(developer|admin|root|superuser|jailbroken|unrestricted|evil|malicious|hacker)", re.I),
      "role switch: 'act as developer/admin/jailbroken'"),
+
+    (re.compile(r"pretend\s+(to\s+be|you\s+are|you're)\s+(an?\s+)?(admin|administrator|superuser|root|developer|moderator)", re.I),
+     "role switch: 'pretend to be admin'"),
 
     (re.compile(r"\bDAN\b|\bdo\s+anything\s+now\b", re.I),
      "jailbreak persona: 'DAN'"),

@@ -118,7 +118,7 @@ async def run_analysis_adk(
             "queue":    queue,  # InMemorySessionService holds Python objects directly
         }
 
-        session = session_service.create_session(
+        session = await session_service.create_session(
             app_name=app_name,
             user_id=user_id,
             state=initial_state,
@@ -138,29 +138,20 @@ async def run_analysis_adk(
         # run_async drives the SequentialAgent: each sub-agent runs to
         # completion before the next one starts. Queue progress updates
         # are fired inside each agent's _run_async_impl.
+        state = {}
         async for event in runner.run_async(
             user_id=user_id,
             session_id=session.id,
             new_message=Content(parts=[Part(text=argument)]),
         ):
-            # Events are handled (queue updates, logging) inside each agent.
-            # We log here for observability only.
+            if event.custom_metadata and "state" in event.custom_metadata:
+                state.update(event.custom_metadata["state"])
             if event.author:
                 logger.debug(
                     "[ADK Runner] Job %s — event from agent: %s",
                     job_id,
                     event.author,
                 )
-
-        # ---------------------------------------------------------------
-        # 4. Retrieve completed session state
-        # ---------------------------------------------------------------
-        final_session = session_service.get_session(
-            app_name=app_name,
-            user_id=user_id,
-            session_id=session.id,
-        )
-        state = final_session.state
 
         # Verify all required keys are present (guards against partial runs)
         required_keys = ("structure", "defense", "attack", "verdict")
