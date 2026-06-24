@@ -9,6 +9,7 @@ pinned: false
 <div align="left">
   <h1>ThesisDefender — Kaggle AI Agents Capstone</h1>
   <p><strong>Paste any argument. Find out exactly where it breaks.</strong></p>
+  <p>🌍 <strong>Live Demo:</strong> <a href="https://thesis-defender-kaggle.vercel.app">thesis-defender-kaggle.vercel.app</a></p>
   
   [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
   [![FastAPI](https://img.shields.io/badge/FastAPI-Async-009688.svg)](https://fastapi.tiangolo.com/)
@@ -84,11 +85,7 @@ The CLI renders a rich terminal report and automatically saves the structured re
 - **Backend (Hugging Face Spaces):** A single Docker container running both the FastAPI backend (`7860`) and the FastMCP server (`8001`) simultaneously via `start.sh`.
 - **Frontend (Vercel):** Deployed as a serverless Next.js application, pointing to the Hugging Face Space API URL.
 
-## 📸 Screenshots Placeholder
 
-![Main Interface Placeholder](https://via.placeholder.com/800x450?text=ThesisDefender+Main+Interface)
-![Analysis Results Placeholder](https://via.placeholder.com/800x450?text=Adversarial+Debate+Results)
-*(Replace with actual repository screenshots)*
 
 ## 🔮 Future Improvements
 
