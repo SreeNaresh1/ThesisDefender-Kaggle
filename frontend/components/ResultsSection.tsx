@@ -6,6 +6,7 @@ import AttackPanel from "./AttackPanel";
 import WeakestLinkPanel from "./WeakestLinkPanel";
 import StrengthPanel from "./StrengthPanel";
 import ResilienceMeter from "./ResilienceMeter";
+import ScorecardPanel from "./ScorecardPanel";
 
 interface ResultsSectionProps {
   result: ArgumentAnalysis;
@@ -84,8 +85,12 @@ export default function ResultsSection({ result }: ResultsSectionProps) {
           <div className="flex flex-col font-sans">
             <SteelManPanel defense={result.defense} />
             <AttackPanel attack={result.attack} />
+            <ScorecardPanel 
+              breakdown={result.verdict.score_breakdown} 
+              explanation={result.verdict.score_explanation} 
+            />
             <WeakestLinkPanel vulnerability={result.verdict.critical_vulnerability} />
-            <StrengthPanel originalClaim={result.structure.main_claim} strengthenedClaim={result.verdict.stronger_version} />
+            <StrengthPanel originalClaim={result.structure.main_claim} strengthenedClaim={result.verdict.recommended_revision} />
           </div>
         </div>
         

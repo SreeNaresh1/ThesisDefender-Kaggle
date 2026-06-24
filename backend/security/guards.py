@@ -408,8 +408,8 @@ def _is_placeholder(value: str) -> bool:
 
 # Score-to-label mapping matches SYSTEM_PROMPT_JUDGE rubric exactly.
 _SCORE_LABEL_RANGES: list[tuple[range, str]] = [
-    (range(0, 21),   "fragile"),
-    (range(21, 41),  "weak"),
+    (range(0, 21),   "collapsed"),
+    (range(21, 41),  "fragile"),
     (range(41, 61),  "defensible"),
     (range(61, 81),  "strong"),
     (range(81, 101), "robust"),
@@ -473,17 +473,14 @@ def _validate_verdict_output(obj: Any) -> None:
     if expected_label and expected_label not in verdict_lower:
         # Allow "Strong" to appear in Robust-range verdicts (they often say "Strong / Robust")
         # Only hard-fail when the wrong category word is dominant
-        contradicting_labels = [lbl for lbl in ["fragile", "weak", "defensible", "strong", "robust"]
+        contradicting_labels = [lbl for lbl in ["collapsed", "fragile", "defensible", "strong", "robust"]
                                  if lbl in verdict_lower and lbl != expected_label]
         if contradicting_labels:
-            raise OutputValidationError(
-                f"Score/verdict mismatch: resilience_score={score} implies label "
-                f"'{expected_label}', but verdict contains '{contradicting_labels[0]}'. "
-                f"Recalculate the score or rewrite the verdict to match."
-            )
+            # Auto-fix verdict string instead of crashing
+            obj.verdict = f"{expected_label} - {obj.verdict}"
 
     # 2. Required non-empty string fields
-    for field_name in ("verdict", "critical_vulnerability", "reasoning_summary", "stronger_version"):
+    for field_name in ("verdict", "critical_vulnerability", "score_explanation", "recommended_revision"):
         val = getattr(obj, field_name, "")
         if not val or len(val.strip()) < 5:
             raise OutputValidationError(
@@ -498,6 +495,44 @@ def _validate_verdict_output(obj: Any) -> None:
             raise OutputValidationError(
                 f"VerdictOutput.{field_name} must contain at least one item."
             )
+            
+    # 4. Validate score breakdown
+    breakdown = getattr(obj, "score_breakdown", None)
+    if not breakdown:
+        raise OutputValidationError("VerdictOutput.score_breakdown is missing.")
+        
+    dimensions = ["evidence_quality", "assumption_strength", "counterargument_resistance", "practical_feasibility", "scope_precision"]
+    
+    total_breakdown_score = 0
+    for dim in dimensions:
+        dim_obj = getattr(breakdown, dim, None)
+        if not dim_obj:
+            raise OutputValidationError(f"score_breakdown missing dimension: {dim}")
+            
+        dim_score = getattr(dim_obj, "score", None)
+        dim_reason = getattr(dim_obj, "reason", "")
+        
+        if dim_score is None or not (0 <= dim_score <= 20):
+            raise OutputValidationError(f"score_breakdown.{dim}.score must be between 0 and 20.")
+            
+        if not dim_reason or len(dim_reason.strip()) < 5:
+            raise OutputValidationError(f"score_breakdown.{dim}.reason is empty or too short.")
+            
+        total_breakdown_score += dim_score
+        
+    if total_breakdown_score != score:
+        # Auto-fix the score to equal the sum of the breakdown
+        obj.resilience_score = total_breakdown_score
+        
+        # We must re-check the label mapping because the score changed
+        new_expected_label = None
+        for score_range, label in _SCORE_LABEL_RANGES:
+            if total_breakdown_score in score_range:
+                new_expected_label = label
+                break
+                
+        if new_expected_label and new_expected_label not in obj.verdict.lower():
+            obj.verdict = f"{new_expected_label} - {obj.verdict}"
 
 
 def _validate_argument_structure(obj: Any) -> None:

@@ -25,24 +25,29 @@ async def test_4_agent_pipeline_execution(mock_model_client, mock_queue):
             "main_claim": "AI will replace jobs",
             "assumptions": ["assumption 1", "assumption 2"]
         },
-        # Defense
         {
-            "best_defense": "Best defense text.",
+            "best_defense": "This is the best defense text, which is longer than twenty characters.",
             "supporting_points": ["point 1", "point 2"]
         },
-        # Prosecutor
         {
-            "strongest_attack": "Strongest attack text.",
+            "strongest_attack": "This is the strongest attack text, which is also longer than twenty chars.",
             "counterpoints": ["counter 1", "counter 2"]
         },
         # Judge
         {
             "resilience_score": 68,
-            "verdict": "Mixed results",
+            "verdict": "Strong results",
+            "score_explanation": "Summary of reasoning.",
+            "score_breakdown": {
+                "evidence_quality": {"score": 14, "reason": "reason"},
+                "assumption_strength": {"score": 14, "reason": "reason"},
+                "counterargument_resistance": {"score": 14, "reason": "reason"},
+                "practical_feasibility": {"score": 13, "reason": "reason"},
+                "scope_precision": {"score": 13, "reason": "reason"}
+            },
             "critical_vulnerability": "The main vulnerability.",
-            "recommended_fixes": ["fix 1", "fix 2", "fix 3"],
-            "stronger_version": "A much better claim.",
-            "reasoning_summary": "Summary of reasoning."
+            "recommended_revision": "A much better claim.",
+            "recommended_fixes": ["fix 1", "fix 2", "fix 3"]
         }
     ]
 
@@ -62,7 +67,8 @@ async def test_4_agent_pipeline_execution(mock_model_client, mock_queue):
             break
             
     assert complete_call is not None
-    assert complete_call.kwargs["job_id"] == "job123"
+    job_id = complete_call.kwargs.get("job_id") or complete_call.args[0]
+    assert job_id == "job123"
     result = complete_call.kwargs["result"]
     assert result["total_llm_calls"] == 4
     assert result["verdict"]["resilience_score"] == 68
@@ -70,26 +76,33 @@ async def test_4_agent_pipeline_execution(mock_model_client, mock_queue):
 @pytest.mark.asyncio
 async def test_structure_extraction_retry(mock_model_client, mock_queue):
     mock_model_client.complete_json.side_effect = [
-        Exception("JSON Parse Error"), # First call fails
+        ValueError("JSON Parse Error"), # First call fails
         {
             "main_claim": "AI will replace jobs",
             "assumptions": ["assumption 1", "assumption 2"]
         },
         {
-            "best_defense": "Best defense text.",
+            "best_defense": "This is the best defense text, which is longer than twenty characters.",
             "supporting_points": ["point 1"]
         },
         {
-            "strongest_attack": "Strongest attack text.",
+            "strongest_attack": "This is the strongest attack text, which is also longer than twenty chars.",
             "counterpoints": ["counter 1"]
         },
         {
             "resilience_score": 68,
-            "verdict": "Mixed results",
+            "verdict": "Strong results",
+            "score_explanation": "Summary of reasoning.",
+            "score_breakdown": {
+                "evidence_quality": {"score": 14, "reason": "reason"},
+                "assumption_strength": {"score": 14, "reason": "reason"},
+                "counterargument_resistance": {"score": 14, "reason": "reason"},
+                "practical_feasibility": {"score": 13, "reason": "reason"},
+                "scope_precision": {"score": 13, "reason": "reason"}
+            },
             "critical_vulnerability": "The main vulnerability.",
-            "recommended_fixes": ["fix 1"],
-            "stronger_version": "A much better claim.",
-            "reasoning_summary": "Summary of reasoning."
+            "recommended_revision": "A much better claim.",
+            "recommended_fixes": ["fix 1"]
         }
     ]
 

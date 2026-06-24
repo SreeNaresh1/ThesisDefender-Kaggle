@@ -315,15 +315,31 @@ class TestValidateLLMOutput:
         fixes: list = None,
         stronger: str = "A much better and more carefully qualified version of the claim.",
         summary: str = "The defense held up well; the prosecutor only identified scope limitations.",
+        breakdown_scores: list = None,
     ):
-        from models.schemas import VerdictOutput
+        from models.schemas import VerdictOutput, ScoreBreakdown, DimensionScore
+        
+        if breakdown_scores is None:
+            # We need them to sum to `score`.
+            b_scores = [score // 5] * 5
+            b_scores[0] += score % 5
+        else:
+            b_scores = breakdown_scores
+            
         return VerdictOutput(
             resilience_score=score,
             verdict=verdict,
+            score_explanation=summary,
+            score_breakdown=ScoreBreakdown(
+                evidence_quality=DimensionScore(score=b_scores[0], reason="reason 1"),
+                assumption_strength=DimensionScore(score=b_scores[1], reason="reason 2"),
+                counterargument_resistance=DimensionScore(score=b_scores[2], reason="reason 3"),
+                practical_feasibility=DimensionScore(score=b_scores[3], reason="reason 4"),
+                scope_precision=DimensionScore(score=b_scores[4], reason="reason 5")
+            ),
             critical_vulnerability=vulnerability,
+            recommended_revision=stronger,
             recommended_fixes=fixes if fixes is not None else ["Add citations.", "Narrow the scope."],
-            stronger_version=stronger,
-            reasoning_summary=summary,
         )
 
     @staticmethod
@@ -357,20 +373,26 @@ class TestValidateLLMOutput:
 
     def test_verdict_robust_score_passes(self):
         validate_llm_output(self._make_verdict(
-            score=90, verdict="The argument is Robust and withstands all attacks."
+            score=90, verdict="The argument is Robust and withstands all attacks.", breakdown_scores=[18,18,18,18,18]
         ))
 
-    def test_verdict_fragile_score_passes(self):
-        validate_llm_output(self._make_verdict(
-            score=10, verdict="The argument is Fragile and collapses under scrutiny."
-        ))
-
-    def test_score_verdict_mismatch_raises(self):
-        # Score 85 (Robust range) but verdict says "Weak"
-        with pytest.raises(OutputValidationError, match="mismatch"):
-            validate_llm_output(self._make_verdict(
-                score=85, verdict="The argument is Weak and poorly supported."
-            ))
+    def test_boundary_scores(self):
+        # 20 -> Collapsed
+        validate_llm_output(self._make_verdict(score=20, verdict="Collapsed", breakdown_scores=[4,4,4,4,4]))
+        # 21 -> Fragile
+        validate_llm_output(self._make_verdict(score=21, verdict="Fragile", breakdown_scores=[5,4,4,4,4]))
+        # 40 -> Fragile
+        validate_llm_output(self._make_verdict(score=40, verdict="Fragile", breakdown_scores=[8,8,8,8,8]))
+        # 41 -> Defensible
+        validate_llm_output(self._make_verdict(score=41, verdict="Defensible", breakdown_scores=[9,8,8,8,8]))
+        # 60 -> Defensible
+        validate_llm_output(self._make_verdict(score=60, verdict="Defensible", breakdown_scores=[12,12,12,12,12]))
+        # 61 -> Strong
+        validate_llm_output(self._make_verdict(score=61, verdict="Strong", breakdown_scores=[13,12,12,12,12]))
+        # 80 -> Strong
+        validate_llm_output(self._make_verdict(score=80, verdict="Strong", breakdown_scores=[16,16,16,16,16]))
+        # 81 -> Robust
+        validate_llm_output(self._make_verdict(score=81, verdict="Robust", breakdown_scores=[17,16,16,16,16]))
 
     def test_empty_verdict_text_raises(self):
         with pytest.raises(OutputValidationError):
@@ -387,6 +409,21 @@ class TestValidateLLMOutput:
     def test_short_reasoning_raises(self):
         with pytest.raises(OutputValidationError):
             validate_llm_output(self._make_verdict(summary="ok"))
+            
+    def test_sum_validation_autofixes_score(self):
+        # breakdown sums to 46 but overall score is 45
+        # The auto-fix should change score to 46 and prepend 'Defensible - ' if needed
+        verdict_obj = self._make_verdict(score=45, verdict="Mixed", breakdown_scores=[10, 9, 9, 9, 9])
+        validate_llm_output(verdict_obj)
+        assert verdict_obj.resilience_score == 46
+        assert "defensible" in verdict_obj.verdict.lower()
+        assert "Mixed" in verdict_obj.verdict
+
+    def test_verdict_label_autofixes(self):
+        # score matches but label contradicts
+        verdict_obj = self._make_verdict(score=20, verdict="Strong", breakdown_scores=[4, 4, 4, 4, 4])
+        validate_llm_output(verdict_obj)
+        assert "collapsed" in verdict_obj.verdict.lower()
 
     # ---- ArgumentStructure tests ----
 

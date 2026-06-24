@@ -14,13 +14,25 @@ class AttackOutput(BaseModel):
     strongest_attack: str
     counterpoints: list[str]
 
+class DimensionScore(BaseModel):
+    score: int = Field(ge=0, le=20)
+    reason: str
+
+class ScoreBreakdown(BaseModel):
+    evidence_quality: DimensionScore
+    assumption_strength: DimensionScore
+    counterargument_resistance: DimensionScore
+    practical_feasibility: DimensionScore
+    scope_precision: DimensionScore
+
 class VerdictOutput(BaseModel):
     resilience_score: int = Field(ge=0, le=100)
     verdict: str
+    score_explanation: str
+    score_breakdown: ScoreBreakdown
     critical_vulnerability: str
+    recommended_revision: str
     recommended_fixes: list[str]
-    stronger_version: str
-    reasoning_summary: str
 
 class ArgumentAnalysis(BaseModel):
     job_id: str
@@ -48,9 +60,9 @@ class AnalysisRequest(BaseModel):
 
 def get_score_label(score: int) -> str:
     if score <= 20:
-        return "Fragile"
+        return "Collapsed"
     elif score <= 40:
-        return "Weak"
+        return "Fragile"
     elif score <= 60:
         return "Defensible"
     elif score <= 80:

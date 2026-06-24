@@ -13,13 +13,27 @@ export interface AttackOutput {
   counterpoints: string[];
 }
 
+export interface DimensionScore {
+  score: number;
+  reason: string;
+}
+
+export interface ScoreBreakdown {
+  evidence_quality: DimensionScore;
+  assumption_strength: DimensionScore;
+  counterargument_resistance: DimensionScore;
+  practical_feasibility: DimensionScore;
+  scope_precision: DimensionScore;
+}
+
 export interface VerdictOutput {
   resilience_score: number;
   verdict: string;
+  score_explanation: string;
+  score_breakdown: ScoreBreakdown;
   critical_vulnerability: string;
+  recommended_revision: string;
   recommended_fixes: string[];
-  stronger_version: string;
-  reasoning_summary: string;
 }
 
 export interface ArgumentAnalysis {
@@ -55,28 +69,25 @@ export interface AnalysisJob {
 }
 
 export const SCORE_COLORS = {
-  0: "#E84B4A",   // 0-15 Fragile
-  16: "#D85A30",  // 16-30 Weak
-  31: "#BA7517",  // 31-50 Mixed
-  51: "#4CAF7D",  // 51-70 Defensible
-  71: "#1DB87A",  // 71-85 Resilient
-  86: "#0F9E6A",  // 86-100 Bulletproof
+  0: "#E84B4A",   // 0-20 Collapsed
+  21: "#D85A30",  // 21-40 Fragile
+  41: "#BA7517",  // 41-60 Defensible
+  61: "#4CAF7D",  // 61-80 Strong
+  81: "#0F9E6A",  // 81-100 Robust
 } as const;
 
 export function getScoreColor(score: number): string {
-  if (score <= 15) return SCORE_COLORS[0];
-  if (score <= 30) return SCORE_COLORS[16];
-  if (score <= 50) return SCORE_COLORS[31];
-  if (score <= 70) return SCORE_COLORS[51];
-  if (score <= 85) return SCORE_COLORS[71];
-  return SCORE_COLORS[86];
+  if (score <= 20) return SCORE_COLORS[0];
+  if (score <= 40) return SCORE_COLORS[21];
+  if (score <= 60) return SCORE_COLORS[41];
+  if (score <= 80) return SCORE_COLORS[61];
+  return SCORE_COLORS[81];
 }
 
 export function getScoreLabel(score: number): string {
-  if (score <= 15) return "Fragile";
-  if (score <= 30) return "Weak";
-  if (score <= 50) return "Mixed";
-  if (score <= 70) return "Defensible";
-  if (score <= 85) return "Resilient";
-  return "Bulletproof";
+  if (score <= 20) return "Collapsed";
+  if (score <= 40) return "Fragile";
+  if (score <= 60) return "Defensible";
+  if (score <= 80) return "Strong";
+  return "Robust";
 }
