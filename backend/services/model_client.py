@@ -35,7 +35,7 @@ class ModelClient:
                 base_url="https://openrouter.ai/api/v1",
                 api_key=api_key,
             )
-            self.model_name = settings.MODEL_NAME or "google/gemini-2.5-flash"
+            self.model_name = settings.MODEL_NAME or "google/gemini-2.0-flash-lite-preview-02-05:free"
         else:
             raise ValueError(f"Unknown provider: {self.provider}")
 
