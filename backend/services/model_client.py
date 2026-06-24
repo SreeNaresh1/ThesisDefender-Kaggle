@@ -35,7 +35,7 @@ class ModelClient:
                 base_url="https://openrouter.ai/api/v1",
                 api_key=api_key,
             )
-            self.model_name = settings.MODEL_NAME or "meta-llama/llama-3.3-70b-instruct:free"
+            self.model_name = settings.MODEL_NAME or "google/gemini-2.5-flash-lite"
         else:
             raise ValueError(f"Unknown provider: {self.provider}")
 
