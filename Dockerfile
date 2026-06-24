@@ -6,6 +6,8 @@ WORKDIR /app
 RUN adduser --disabled-password --gecos '' appuser && \
     chown -R appuser:appuser /app
 
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Install dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
