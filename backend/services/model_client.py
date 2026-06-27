@@ -3,7 +3,8 @@ import asyncio
 from typing import Optional
 import httpx
 from openai import AsyncOpenAI
-import google.generativeai as genai
+from google import genai
+import os
 
 from config import settings
 
@@ -28,7 +29,7 @@ class ModelClient:
             )
             self.model_name = settings.MODEL_NAME or "gpt-4o"
         elif self.provider == "gemini":
-            genai.configure(api_key=api_key)
+            self.client = genai.Client(api_key=api_key)
             self.model_name = settings.MODEL_NAME or "gemini-2.5-flash-lite"
         elif self.provider == "openrouter":
             self.client = AsyncOpenAI(
@@ -71,17 +72,19 @@ class ModelClient:
                     return response.choices[0].message.content
                 
                 elif self.provider == "gemini":
-                    model = genai.GenerativeModel(self.model_name, system_instruction=system_prompt)
-                    generation_config = genai.types.GenerationConfig(
+                    from google.genai import types
+                    generation_config = types.GenerateContentConfig(
                         temperature=temperature,
                         max_output_tokens=max_tokens,
+                        system_instruction=system_prompt,
                     )
                     if json_mode:
                         generation_config.response_mime_type = "application/json"
                     
-                    response = model.generate_content(
-                        user_prompt,
-                        generation_config=generation_config
+                    response = await self.client.aio.models.generate_content(
+                        model=self.model_name,
+                        contents=user_prompt,
+                        config=generation_config
                     )
                     return response.text
                     
@@ -121,5 +124,11 @@ def create_model_client() -> ModelClient:
         
     if not key:
         raise ValueError(f"Missing API key for provider {provider}")
+        
+    if provider == "gemini":
+        os.environ["GEMINI_API_KEY"] = key
+    elif not os.environ.get("GEMINI_API_KEY"):
+        # ADK requires GEMINI_API_KEY to be set in the environment even if we use another provider
+        os.environ["GEMINI_API_KEY"] = "dummy_adk_key"
         
     return ModelClient(provider=provider, api_key=key)
