@@ -117,7 +117,7 @@ class OrchestratorAgent(BaseAgent):
             SYSTEM_PROMPT_ORCHESTRATOR,
             f"Argument to analyze:\n\n{argument}",
             temperature=0.1,
-            max_tokens=1000,
+            max_tokens=500,
             schema_class=ArgumentStructure,
         )
 
@@ -191,7 +191,7 @@ class DefenseCounselAgent(BaseAgent):
             SYSTEM_PROMPT_DEFENSE,
             build_defense_user_prompt(argument, structure),
             temperature=0.3,
-            max_tokens=1000,
+            max_tokens=500,
             schema_class=DefenseOutput,
         )
 
@@ -282,7 +282,7 @@ class ProsecutorAgent(BaseAgent):
             SYSTEM_PROMPT_PROSECUTOR,
             prosecutor_prompt,
             temperature=0.3,
-            max_tokens=1000,
+            max_tokens=500,
             schema_class=AttackOutput,
         )
 
@@ -335,7 +335,7 @@ class JudgeAgent(BaseAgent):
             SYSTEM_PROMPT_JUDGE,
             build_judge_user_prompt(argument, structure, defense, attack),
             temperature=0.0,
-            max_tokens=1000,
+            max_tokens=500,
             schema_class=VerdictOutput,
         )
 

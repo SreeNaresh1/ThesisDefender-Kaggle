@@ -36,8 +36,7 @@ class ModelClient:
                 base_url="https://openrouter.ai/api/v1",
                 api_key=api_key,
             )
-            # Use a completely free model on OpenRouter by default to avoid 402 Credit errors
-            self.model_name = settings.MODEL_NAME or "google/gemini-2.0-flash-lite-preview-02-05:free"
+            self.model_name = settings.MODEL_NAME or "google/gemini-2.5-flash-lite"
         else:
             raise ValueError(f"Unknown provider: {self.provider}")
 
@@ -51,7 +50,7 @@ class ModelClient:
             text = text[:-3]
         return text.strip()
 
-    async def complete(self, system_prompt: str, user_prompt: str, temperature: float = 0.7, max_tokens: int = 1000, json_mode: bool = False) -> str:
+    async def complete(self, system_prompt: str, user_prompt: str, temperature: float = 0.7, max_tokens: int = 500, json_mode: bool = False) -> str:
         backoffs = [2, 5, 10, 35, 60]
         for attempt in range(len(backoffs) + 1):
             try:
@@ -96,7 +95,7 @@ class ModelClient:
                 
         raise ModelError("Max retries exceeded", self.provider)
 
-    async def complete_json(self, system_prompt: str, user_prompt: str, temperature: float = 0.1, max_tokens: int = 1000) -> dict:
+    async def complete_json(self, system_prompt: str, user_prompt: str, temperature: float = 0.1, max_tokens: int = 500) -> dict:
         max_attempts = 3
         last_cleaned = ""
         for attempt in range(max_attempts):
